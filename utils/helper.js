@@ -16,50 +16,62 @@ export const tranformInterchanges = (interchanges, initial = false) => {
 }
 
 export const searchInterchange = (interchanges, question) => {
-  let result = interchanges.find(e => e.question.includes(question))
+  let result = interchanges.find(e => e.question.toLowerCase().includes(question.toLowerCase()))
   if(result) return result.answer
-  return `Cant seem to understand your question, please try again 😔<br>
+  return `Cant seem to understand your question, please try again 😔<br><br>
     Here are the options again: <br/> <br/>
     ${tranformInterchanges(interchanges)}
   `
 }
 
 
-export const showBotTyping = async (setInterchange, prevState) => {
+export const showBotTyping = async (setInterchange, prevState, setAllow) => {
 
+  scrollDown()
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  setInterchange([...prevState, {
+    owner: false,
+    text: 'Bot Assistant is typing.'
+  }])
+  scrollDown()
 
   await new Promise(resolve => setTimeout(resolve, 1000));
   setInterchange([...prevState, {
     owner: false,
-    text: 'bot is typing.'
+    text: 'Bot Assistant is typing..'
   }])
+  scrollDown()
 
   await new Promise(resolve => setTimeout(resolve, 1000));
   setInterchange([...prevState, {
     owner: false,
-    text: 'bot is typing..'
+    text: 'Bot Assistant is typing...'
   }])
-
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  setInterchange([...prevState, {
-    owner: false,
-    text: 'bot is typing...'
-  }])
+  scrollDown()
+  
 
 
   await new Promise(resolve => setTimeout(resolve, 1000));
+  setAllow(true)
+  scrollDown()
+  
 }
 
-export const getBotAnswer = async (interchanges, setInterchange, question, prevState) => {
-  await showBotTyping(setInterchange, prevState,)
+export const getBotAnswer = async (interchanges, setInterchange, question, prevState, setAllow) => {
+  await showBotTyping(setInterchange, prevState, setAllow)
 
   setInterchange([...prevState, {
     owner: false,
     text: searchInterchange(interchanges,question)
   }])
+  scrollDown()
 }
 
 
+const scrollDown = () => {
+  document.getElementById('scrollTo').scrollIntoView({behavior: "smooth", block: "start"});
+
+}
 export const fetchQuery = async (path, params = null) => {
   let url
   if (params !== null) {
