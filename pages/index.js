@@ -1,82 +1,90 @@
 import Head from 'next/head'
+import { useState, useEffect } from 'react'
+import { createMarkup, tranformInterchanges, getBotAnswer, fetchQuery } from '../utils/helper'
 
-export default function Home() {
+export default function Home( { interchanges }) {
+  const [userQuestion, setUserQuestion] = useState('')
+  const [interchange, setInterchange] = useState([{
+    owner: false,
+    text: 'bot is typing...'
+  }])
+
+ useEffect(async () => {
+  await new Promise(resolve => setTimeout(resolve, 4000));
+ setInterchange([{
+  owner: false,
+  text: tranformInterchanges(interchanges, true)
+}])
+}, [interchanges])
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  if(!userQuestion) return
+  const uQ = userQuestion
+  const newInterchange = [...interchange, {
+    owner: true,
+    text: userQuestion
+  }]
+
+  setInterchange(newInterchange)
+  setUserQuestion('')
+  getBotAnswer(interchanges,setInterchange,  uQ, newInterchange)
+}
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="flex flex-col items-center justify-center min-h-screen">
       <Head>
-        <title>Create Next App</title>
+        <title>ChatBot Assistant</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
-
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="p-3 font-mono text-lg bg-gray-100 rounded-md">
-            pages/index.js
-          </code>
-        </p>
-
-        <div className="flex flex-wrap items-center justify-around max-w-4xl mt-6 sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className="flex items-center justify-center w-full h-24 border-t">
+      <form className="flex flex-col w-full flex-1" onSubmit={handleSubmit}>
+       
+        <header className="flex w-full h-24 fixed bg-black border-b">
         <a
           className="flex items-center justify-center"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+          href="#"
           target="_blank"
-          rel="noopener noreferrer"
         >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="h-4 ml-2" />
+          <span className="text-white bolder text-4 p-2"> Bot Assistant</span>
         </a>
-      </footer>
+        </header>
+        <div className="flex flex-col mt-24 bg-gray-200  overflow-scroll p-2 w-full" style={{ height: "80vh"}}>
+        {interchange.map((chat,i) => (
+          chat.owner ? 
+          <div key={i} className="user flex flex-row my-2 w-full p-2">
+          <span className="w-2/3"></span>
+          <span className="w-1/3 bg-gray-100 p-2 rounded">
+           {chat.text}
+          </span>
+        </div>
+         :   
+          <div key={i} className="bot my-2 bg-gray-100 w-1/2 lg:w-1/3  p-2 rounded">
+            <span dangerouslySetInnerHTML={createMarkup(chat.text)} />
+          </div>
+        ))}
+        </div>
+
+        <footer className="flex flex-row justify-between items-center p-1 h-5/6  w-full -bottom-5">
+        <div className="flex flex-row justify-between flex-1 bg-white w-full">
+          <input className=" bg-gray-200 w-2/3 p-2 " placeholder="Type a message" value={userQuestion} onChange={ (e) => { setUserQuestion(e.target.value)}}/>
+          <button className="bg-black p-2 ml-2 w-1/3  text-white" type="submit"> Send</button>
+        </div>
+        </footer>
+      </form>
+
+      
     </div>
   )
+}
+
+
+export async function getStaticProps() {
+  const interchanges = await fetchQuery('interchanges')
+  return {
+    props: {
+      interchanges
+    }
+  }
 }
